@@ -1,0 +1,37 @@
+import React from 'react';
+import {View, StyleSheet, Text, TextInput, Image, SafeAreaView, TouchableOpacity} from 'react-native';
+import {FontAwesome5} from '@expo/vector-icons';
+const { Dimensions } = require('react-native');
+const { width, height } = Dimensions.get('screen');
+export default function ButtonInf({onPress}) {
+    return(
+   <View style={styles.container}>
+       <SafeAreaView style={{flex:1}}>
+           <TouchableOpacity 
+           style={{alignItems:"flex-start", margin: 16}} onPress={onPress} >
+                {/* <FontAwesome5 
+                name="align-right" 
+                size={28} 
+                color="#fff"
+                style={{transform: [{rotateX: '180deg'},{rotateY:'180deg'}]}}/> */}
+                <View style={{height:height*0.041,
+            justifyContent:'center',
+            alignItems:'center'}}>
+                    <Image 
+                    style={{flex: 1,
+                        aspectRatio: 1.5, 
+                        resizeMode: 'contain',}}
+                    source={require('./src/buttoninf.png')}/>
+                </View>
+           </TouchableOpacity>
+
+       </SafeAreaView>
+   </View> 
+)
+}
+    const  styles = StyleSheet.create({
+        container:{
+            height:100,
+            paddingTop: 20, 
+        },
+    })
