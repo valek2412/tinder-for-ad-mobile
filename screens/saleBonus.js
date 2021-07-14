@@ -7,177 +7,176 @@ import { Ionicons } from '@expo/vector-icons';
 import * as SecureStore from 'expo-secure-store';
 import { useState } from 'react';
 import {useEffect} from 'react';
-import * as firebase from 'firebase';
-const getToken = () => {
-  return SecureStore.getItemAsync('secure_token');
-};
-const FIREBASE_CONFIG = {
-  apiKey: "AIzaSyB-dAvF2pV6l3DhvLX9-uzaXeqRnzE5dHg",
-  authDomain: "tinderforadbd.firebaseapp.com",
-  databaseURL: "https://tinderforadbd-default-rtdb.firebaseio.com",
-  projectId: "tinderforadbd",
-  storageBucket: "tinderforadbd.appspot.com",
-  messagingSenderId: "1030422612794",
-  appId: "1:1030422612794:web:7c034724ed0c0233591e03",
-  measurementId: "G-G3PJXKM91T"
-};
-function getUserLast(userID) {
-  var tester;
-  var database = firebase.database().ref(`/users/${userID}`);
-  console.log('Auto generated key: ', database.key);
-  database.on('value', (snapshot)=>{
-  if (snapshot.exists()) {
-       console.log(snapshot);
-      const userObj = snapshot.val();
-      tester = userObj.lastName;
-      }
-  })
-  return tester;
-};
-function getUserFirst(userID) {
-  var tester;
-  var database = firebase.database().ref(`/users/${userID}`);
-  console.log('Auto generated key: ', database.key);
-  database.on('value', (snapshot)=>{
-  if (snapshot.exists()) {
-       console.log(snapshot);
-      const userObj = snapshot.val();
-      tester = userObj.firstName;
-      }
-  })
-  return tester;
-};
-function getUserMoney(userID) {
-  var tester;
-  var database = firebase.database().ref(`/users/${userID}`);
-  console.log('Auto generated key: ', database.key);
-  database.on('value', (snapshot)=>{
-  if (snapshot.exists()) {
-       console.log(snapshot);
-      const userObj = snapshot.val();
-      tester = userObj.money;
-      }
-  })
-  return tester;
-};
+import axios from "axios";
+import {API_URL} from '../config'
+
 export function SaleBonus(props) {
-    const [id,setId]= useState('')
-    getToken().then(token => setId(token))
-    function updateUserManey(userID, addManey){
-      return '2000'
-      const reference = firebase.database().ref(`/users/${userID}/money`);
-      return reference.transaction(money => {
-          if(addManey>money){
-            Alert.alert(
-              "Ошибка",
-              "Недостаточно средств!",
-              [
-              { text: "OK", onPress: () => {} }
-              ]);
-          }else{
-            getUserMoney(id)
-            if (money === null) return addManey;
-            
-            return money - addManey;
-            }
-          });
+  const [id, setId] = useState('');
+  const [name, setName] = useState('');
+  const [surname, setSurname] = useState('');
+  const [balance, setBalance] = useState(0);
+  const [prizes, setPrizes] = useState([]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const userId = await SecureStore.getItemAsync('userId');
+        const user = await axios.get(`${API_URL}/users/${userId}`);
+        const prizes = await axios.get(`${API_URL}/prizes`);
+        setId(userId);
+        setBalance(user.data.points);
+        setName(user.data.name);
+        setSurname(user.data.surname);
+        setPrizes(prizes.data);
+      } catch (e) {
+        console.log(e);
+      }
     }
-    const backAction = () => {
-      props.navigation.navigate('Root')
-      return true;
-    };
-  
-    useEffect(() => {
-      BackHandler.addEventListener("hardwareBackPress", backAction);
-  
-      return () =>
-        BackHandler.removeEventListener("hardwareBackPress", backAction);
-    }, []);
-    var userName = 'userName'
-    var lastUser = 'LastName'
-    return(
-        <View style={styles.container }>
-        <View>
-        <LinearGradient start={{x:-0.15, y:-0.15}} end={{x: 1, y: 1}} style={{alignItems:'center'}}   colors={['#9900cc', '#6666ff']}>
-          
-            <View style={{height:height*0.16,justifyContent:'flex-end'}}>
-            <Text style={styles.userInf}>Имя{"\n"}Фамилия</Text>
+    fetchData();
+  }, [balance])
+
+
+  const backAction = () => {
+    props.navigation.push('App')
+    return true;
+  };
+
+  useEffect(() => {
+    BackHandler.addEventListener("hardwareBackPress", backAction);
+
+    return () =>
+      BackHandler.removeEventListener("hardwareBackPress", backAction);
+  }, []);
+
+
+  return (
+    <View style={styles.container}>
+      <View>
+        <LinearGradient start={{x: -0.15, y: -0.15}} end={{x: 1, y: 1}} style={{alignItems: 'center'}}
+                        colors={['#9900cc', '#6666ff']}>
+
+          <View style={{height: height * 0.16, justifyContent: 'flex-end'}}>
+            <Text style={styles.userInf}>{name}{"\n"}{surname}</Text>
+          </View>
+          <View style={styles.roundText}>
+            <View style={{flex: 3, alignItems: 'center'}}>
+              <Text style={{fontSize: 50, color: '#FFF'}}>{balance}</Text>
             </View>
-            <View style={styles.roundText}>
-              <View style={{flex:3,alignItems: 'center'}}>
-                  <Text style={{fontSize:50, color:'#FFF'}}>{"2000"}</Text>
-              </View>
-              <View style={{flex:2,alignItems: 'flex-start'}}>
-                  <Text style={{fontSize:16, color:'#FFF'}}>Бонусов{"\n"} на счету</Text>
-              </View>            
+            <View style={{flex: 2, alignItems: 'flex-start'}}>
+              <Text style={{fontSize: 16, color: '#FFF'}}>Бонусов{"\n"} на счету</Text>
             </View>
+          </View>
         </LinearGradient>
+      </View>
+      <View style={{alignItems: 'center'}}>
+        <View style={{
+          flexDirection: "row",
+          height: height * 0.051,
+          alignItems: 'center',
+          backgroundColor: '#e6e6e6',
+          width: width * 0.5,
+          borderRadius: 30,
+          position: 'absolute',
+          bottom: height * 0.525
+        }}>
+          <View style={{width: width * 0.133, alignItems: 'flex-end'}}>
+            <Ionicons name="bookmark-outline" size={28} color="#9900cc"/>
+
+          </View>
+          <View style={{width: width * 0.338, alignItems: 'center',}}>
+            <TouchableOpacity
+
+              onPress={() => {
+              }}>
+              <View style={styles.button}>
+                <Text style={styles.smallbuttontext}>
+                  Мой архив
+                </Text>
+              </View>
+            </TouchableOpacity>
+          </View>
         </View>
-        <View style={{ alignItems:'center'}}>
-            <View style={{flexDirection:"row",height:height*0.051, alignItems:'center',backgroundColor:'#e6e6e6',width:width*0.5, borderRadius: 30, position:'absolute', bottom:height*0.525}}>
-              <View style={{width:width*0.133, alignItems:'flex-end'}} >
-                <Ionicons name="bookmark-outline" size={28} color="#9900cc"  />
-                
+        <View style={{height: height * 0.071}}/>
+        {/*<View style={{alignItems:'center',height:height*0.12}}>*/}
+        {/*  <TouchableOpacity onPress={()=>{}}>*/}
+        {/*    <View style={styles.button1}>*/}
+        {/*          <Text style={styles.buttontext}>*/}
+        {/*          Преобразовать бонусы в скидку*/}
+        {/*          </Text>*/}
+        {/*      </View>*/}
+        {/*  </TouchableOpacity>*/}
+        {/*</View>*/}
+        {prizes.map(prize => (
+          <View style={{alignItems: 'center', height: height * 0.12}}>
+            <TouchableOpacity onPress={async () => {
+              await axios.post(`${API_URL}/winners`, {userId: id, prizeId: prize.id})
+                .then(response => {
+                  setBalance(prevState => prevState - prize.cost)
+                })
+                .catch(err => {
+                  if (err.response.status === 400) {
+                    Alert.alert(
+                      "Ошибка",
+                      "Недостаточно средств",
+                      [
+                        {
+                          text: "OK", onPress: () => {
+                          }
+                        }
+                      ]);
+                  }
+                })
+            }}>
+              <View style={styles.button1}>
+                <Text style={styles.buttontext}>
+                  {prize.title}
+                </Text>
+                <Text style={styles.buttontext2}>
+                  {prize.cost}
+                </Text>
               </View>
-              <View style={{width:width*0.338,alignItems:'center', }}>
-                <TouchableOpacity
-                
-                onPress={()=>{}}>
-                  <View style={styles.button}>
-                        <Text style={styles.smallbuttontext}>
-                            Мой архив
-                        </Text>
-                    </View>
-                </TouchableOpacity>
-              </View>
-            </View>
-            <View style={{height:height*0.071}}></View>
-            <View style={{alignItems:'center',height:height*0.12}}>
-              <TouchableOpacity onPress={()=>{}}>
-                <View style={styles.button1}>
-                      <Text style={styles.buttontext}>
-                      Преобразовать бонусы в скидку
-                      </Text>
-                  </View>
-              </TouchableOpacity>
-            </View>
-            <View style={{alignItems:'center',height:height*0.12}}>
-              <TouchableOpacity onPress={()=>{updateUserManey(id, 200),props.navigation.push('SaleBonus')}}>
-                <View style={styles.button1}>
-                      <Text style={styles.buttontext}>
-                      Списать 
-                      </Text>
-                      <Text style={styles.buttontext2}>
-                      200
-                      </Text>
-                  </View>
-              </TouchableOpacity>
-            </View>
-            <View style={{alignItems:'center',height:height*0.12}}>
-              <TouchableOpacity onPress={()=>{updateUserManey(id, 400),props.navigation.push('SaleBonus')}}>
-                <View style={styles.button1}>
-                      <Text style={styles.buttontext}>
-                      Списать 
-                      </Text>
-                      <Text style={styles.buttontext2}>
-                      400 
-                      </Text>
-                  </View>
-              </TouchableOpacity>
-            </View>
-            <View style={{alignItems:'center',height:height*0.12}}>
-              <TouchableOpacity onPress={()=>{updateUserManey(id, 600),props.navigation.push('SaleBonus')}}>
-                <View style={styles.button1}>
-                      <Text style={styles.buttontext}>
-                      Списать
-                      </Text>
-                      <Text style={styles.buttontext2}>
-                      600
-                      </Text>
-                  </View>
-              </TouchableOpacity>
-            </View>
-            {/* <View style={{alignItems:'center',height:height*0.07}}>
+            </TouchableOpacity>
+          </View>
+        ))}
+        {/*<View style={{alignItems:'center',height:height*0.12}}>*/}
+        {/*  <TouchableOpacity onPress={()=>{}}>*/}
+        {/*    <View style={styles.button1}>*/}
+        {/*      <Text style={styles.buttontext}>*/}
+        {/*        Списать*/}
+        {/*      </Text>*/}
+        {/*      <Text style={styles.buttontext2}>*/}
+        {/*        200*/}
+        {/*      </Text>*/}
+        {/*    </View>*/}
+        {/*  </TouchableOpacity>*/}
+        {/*</View>*/}
+        {/*<View style={{alignItems:'center',height:height*0.12}}>*/}
+        {/*  <TouchableOpacity onPress={() => {}}>*/}
+        {/*    <View style={styles.button1}>*/}
+        {/*          <Text style={styles.buttontext}>*/}
+        {/*          Списать */}
+        {/*          </Text>*/}
+        {/*          <Text style={styles.buttontext2}>*/}
+        {/*          400 */}
+        {/*          </Text>*/}
+        {/*      </View>*/}
+        {/*  </TouchableOpacity>*/}
+        {/*</View>*/}
+        {/*<View style={{alignItems:'center',height:height*0.12}}>*/}
+        {/*  <TouchableOpacity onPress={()=>{}}>*/}
+        {/*    <View style={styles.button1}>*/}
+        {/*          <Text style={styles.buttontext}>*/}
+        {/*          Списать*/}
+        {/*          </Text>*/}
+        {/*          <Text style={styles.buttontext2}>*/}
+        {/*          600*/}
+        {/*          </Text>*/}
+        {/*      </View>*/}
+        {/*  </TouchableOpacity>*/}
+        {/*</View>*/}
+
+
+        {/* <View style={{alignItems:'center',height:height*0.07}}>
               <TouchableOpacity style={styles.container} onPress={()=>props.navigation.navigate('Exit')}>
                   <View style={styles.button}>
                       <Text style={styles.smallbuttontext2}>
@@ -186,9 +185,9 @@ export function SaleBonus(props) {
                   </View>
               </TouchableOpacity>
             </View> */}
-         </View> 
-        </View>
-      )
+      </View>
+    </View>
+  )
 }
 
 const styles= StyleSheet.create({

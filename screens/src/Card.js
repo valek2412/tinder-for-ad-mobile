@@ -13,9 +13,9 @@ const { width, height } = Dimensions.get('screen');
 import FlatButton3 from '../button3';
   
 export default function Card({
-  name,
+  title,
   source,
-  description,
+  content,
   isFirst,
   swipe,
   tiltSign,
@@ -23,7 +23,7 @@ export default function Card({
   bool,
   ...rest
 },navigation) {
-  const [shouldShow, setshouldShow] = useState(bool);
+  const [shouldShow, setShouldShow] = useState(bool);
   const rotate = Animated.multiply(swipe.x, tiltSign).interpolate({
     inputRange: [-ACTION_OFFSET, 0, ACTION_OFFSET],
     outputRange: ['8deg', '0deg', '-8deg'],
@@ -82,44 +82,42 @@ export default function Card({
       {...rest}
     >
       
-           {/* <Image source={{uri: source}} style={styles.image} /> */}
-      <Image source={ source} style={styles.image} />
+      <Image source={{uri: source}} style={styles.image} />
       <LinearGradient
         colors={['transparent', 'rgba(0,0,0,0.9)']}
         style={styles.gradient}
       />
       <View style={{alignItems:'center'}}>
-      {/* <Text style={styles.name}>{name}</Text> */}
+        <Text style={styles.name}>{title}</Text>
       </View>
 
-      {/* <View style={{width:CARD.WIDTH*0.9}}><Text style={styles.description}>{description}</Text></View> */}
+      <View style={{width:CARD.WIDTH*0.9}}><Text style={styles.description}>{content}</Text></View>
   
         
       {isFirst && renderChoice()}
      
     </Animated.View>
      {
-      shouldShow ?(
+      shouldShow && (
         <SafeAreaView style={{position:'absolute',backgroundColor:'rgba(255,255,255,0.6)', height:0.3*height,bottom:0,width:'100%',borderTopLeftRadius:20,borderTopRightRadius:20,alignItems:'center',flexDirection:'column'}}>
-          <TouchableOpacity onPress={()=>setshouldShow(!shouldShow)}>
-            
+          <TouchableOpacity onPress={()=>setShouldShow(!shouldShow)}>
               <View style={{flex:1,alignItems:'center'}}>
-              <ButtonPoloska onPress={()=>setshouldShow(!shouldShow)}/>
+              <ButtonPoloska onPress={()=>setShouldShow(!shouldShow)}/>
               </View>
               <View style={{flex:2,alignItems:'center'}}>
-                <Text style={styles.name}>{name}</Text>
+                <Text style={styles.name}>{title}</Text>
                 </View>         
                 <View style={{flex:7}}>
-                <Text style={styles.description}>{description}</Text>
+                <Text style={styles.description}>{content}</Text>
                 </View>               
        
           </TouchableOpacity>
         </SafeAreaView>
-              ): null
+              )
     } 
     <View style={{alignItems:'center'}}>
     {
-      !shouldShow ?(
+      !shouldShow && (
          <View style={styles.buttoncontainer}>
           
           <SafeAreaView>
@@ -138,7 +136,7 @@ export default function Card({
           </SafeAreaView>
         <View style={{flex:1, alignItems:'center'}}>
         <ButtonInf  
-             onPress={()=>{setshouldShow(!shouldShow) }}
+             onPress={()=>{setShouldShow(!shouldShow) }}
           />
         </View>
         
@@ -156,7 +154,7 @@ export default function Card({
           </TouchableOpacity>
           </SafeAreaView>
         </View>
-        ): null
+        )
       }
       </View>
        

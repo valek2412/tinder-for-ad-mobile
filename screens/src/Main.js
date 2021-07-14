@@ -5,23 +5,45 @@ import Card from './Card';
 import FlatButton3 from '../button3';
 import Footer from './Footer';
 import { ACTION_OFFSET, CARD } from './constants';
-import { pets as petsArray } from './data';
 import ButtonInf from '../buttoninf';
 import { FontAwesome } from '@expo/vector-icons';
 import { COLORS } from './constants';
 import ButtonPoloska from '../buttonpoloska';
+import axios from "axios";
 const { Dimensions } = require('react-native');
+import * as SecureStore from 'expo-secure-store';
+import FlatButton from "../../Button";
+import {API_URL} from '../../config'
+
 const { width, height } = Dimensions.get('screen');
 
 export default function Main(props) {
-  const [pets, setPets] = useState(petsArray);
+  const [id, setId] = useState(null);
+  const [ads, setAds] = useState([]);
+  const [checkAds, setCheckAds] = useState(true)
   const [bool, setBool] = useState(false);
   const swipe = useRef(new Animated.ValueXY()).current;
   const tiltSign = useRef(new Animated.Value(1)).current;
+
   const backAction = () => {
     props.navigation.navigate('App')
     return true;
   };
+
+
+  useEffect( () => {
+    const fetchData = async () => {
+      try{
+        const userId = await SecureStore.getItemAsync('userId');
+        const response = await axios.get(`${API_URL}/users/${userId}/notEvaluatedAds`);
+        setAds(response.data)
+        setId(userId);
+      } catch (e) {
+        console.log(e);
+      }
+    }
+      fetchData();
+  }, [checkAds])
 
   useEffect(() => {
     BackHandler.addEventListener("hardwareBackPress", backAction);
@@ -29,6 +51,7 @@ export default function Main(props) {
     return () =>
       BackHandler.removeEventListener("hardwareBackPress", backAction);
   }, []);
+
   const scale = useRef(new Animated.Value(1)).current;
 
   const animateScale = useCallback(
@@ -41,12 +64,6 @@ export default function Main(props) {
     },
     [scale]
   );
-  useEffect(() => {
-    if (!pets.length) {
-      // setPets(petsArray);
-      props.navigation.push('App')
-    }
-  }, [pets.length]);
 
   const panResponder = PanResponder.create({
     onMoveShouldSetPanResponder: () => true,
@@ -54,21 +71,39 @@ export default function Main(props) {
       swipe.setValue({ x: dx, y: dy });
       tiltSign.setValue(y0 > CARD.HEIGHT / 2 ? 1 : -1);
     },
-    onPanResponderRelease: (_, { dx, dy }) => {
+    onPanResponderRelease: async (_, { dx, dy }) => {
       const direction = Math.sign(dx);
-      const isActionActive = Math.abs(dx) > ACTION_OFFSET;
-      const isActionActiveInf = Math.abs(dy) > 20;
+      const isActionActiveRight = dx > ACTION_OFFSET;
+      const isActionActiveLeft = dx < -ACTION_OFFSET;
+      const isActionActiveDown = dy > ACTION_OFFSET;
 
-      if (isActionActiveInf) {
-        setBool(bool)
-        console.log(bool)
-      }
-      if (isActionActive) {
-        
+      if (isActionActiveDown) {
+        await axios.post(`${API_URL}/evaluation`, { userId: id, adId: ads[0].id, mark: 'favourite'})
         Animated.timing(swipe, {
           duration: 200,
           toValue: {
-            x: direction * CARD.OUT_OF_SCREEN,
+            x: dx,
+            y: CARD.OUT_OF_SCREEN,
+          },
+          useNativeDriver: true,
+        }).start(removeTopCard);
+      }
+      if (isActionActiveRight) {
+        await axios.post(`${API_URL}/evaluation`, { userId: id, adId: ads[0].id, mark: 'like'})
+        Animated.timing(swipe, {
+          duration: 200,
+          toValue: {
+            x: CARD.OUT_OF_SCREEN,
+            y: dy,
+          },
+          useNativeDriver: true,
+        }).start(removeTopCard);
+      } else if (isActionActiveLeft) {
+        await axios.post(`${API_URL}/evaluation`, { userId: id, adId: ads[0].id, mark: 'dislike'})
+        Animated.timing(swipe, {
+          duration: 200,
+          toValue: {
+            x: -CARD.OUT_OF_SCREEN,
             y: dy,
           },
           useNativeDriver: true,
@@ -86,8 +121,8 @@ export default function Main(props) {
     },
   });
 
-  const removeTopCard = useCallback(() => {
-    setPets((prevState) => prevState.slice(1));
+  const removeTopCard = useCallback( () => {
+    setAds((prevState) => prevState.slice(1));
     swipe.setValue({ x: 0, y: 0 });
   }, [swipe]);
 
@@ -102,21 +137,21 @@ export default function Main(props) {
     [removeTopCard, swipe.x]
   );
 
+
   return (
     <LinearGradient start={{x:-0.15, y:-0.15}} end={{x: 1, y: 1}} style={styles.gradient }  colors={['#9900cc', '#6666ff']}>
-    <View style={styles.container}>
-    
-      {pets
-        .map(({ name, source,description }, index) => {
+      { ads.length ? (<View style={styles.container}>
+      {ads
+        .map(({ id, title, content, image }, index) => {
           const isFirst = index === 0;
           const dragHandlers = isFirst ? panResponder.panHandlers : {};
 
           return (
             <Card
-              key={name}
-              name={name}
-              description={description}
-              source={source}
+              key={id}
+              name={title}
+              description={content}
+              source={`${API_URL}/${image}`}
               isFirst={isFirst}
               swipe={swipe}
               tiltSign={tiltSign}
@@ -127,7 +162,11 @@ export default function Main(props) {
           );
         })
         .reverse()}
-    </View>
+    </View>) : (<View style={{flexDirection: "column", alignItems: 'center'}}>
+        <Text style={styles.text}>Новые предложения{"\n"} будут доступны{"\n"} после 18:00</Text>
+        <View style={{height: height * 0.1}} />
+        <FlatButton text="Проверить наличие доступных предложений" onPress={() => setCheckAds(prev => !prev)}/>
+      </View>)}
     
     <View style={{alignItems:'flex-start',paddingTop:0.01*height,position:'absolute'}}>
         <FlatButton3  onPress={()=>{props.navigation.openDrawer()}}/>
@@ -135,6 +174,7 @@ export default function Main(props) {
     </LinearGradient>
   );
 }
+
 const styles = StyleSheet.create({
   gradient: {
 
@@ -145,7 +185,13 @@ const styles = StyleSheet.create({
     //position:'absolute',
     alignItems: 'center',  
   },
-  
+  text: {
+    fontFamily:'',
+    paddingTop:200,
+    textAlign:'center',
+    fontSize: 25,
+    color: 'white',
+  },
   button: {
     width: 70,
     height: 70,

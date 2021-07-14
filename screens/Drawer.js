@@ -1,106 +1,46 @@
 import * as React from 'react';
 import {View, Text, StyleSheet,TouchableOpacity, Alert } from 'react-native';
-import {
-  createDrawerNavigator,
-  DrawerContentScrollView,
-  DrawerItemList,
-  DrawerItem,
-} from '@react-navigation/drawer';
 import { LinearGradient } from 'expo-linear-gradient';
 import FlatButton3 from '../button3';
-import FlatButton4 from '../button4';
-import FlatButton5 from '../button5';
 import { Ionicons } from '@expo/vector-icons';
-// import FlatButton2 from '../button2';
-import FlatButton6 from '../button6';
-import FlatButton7 from '../button7';
 import * as SecureStore from 'expo-secure-store';
-import { useState,useEffect } from 'react';
-import * as firebase from 'firebase';
+import { useState, useEffect } from 'react';
+import axios from "axios";
 const { Dimensions } = require('react-native');
 const { width, height } = Dimensions.get('screen');
-const getToken = () => {
-    return SecureStore.getItemAsync('secure_token');
-};
-const FIREBASE_CONFIG = {
-    apiKey: "AIzaSyB-dAvF2pV6l3DhvLX9-uzaXeqRnzE5dHg",
-    authDomain: "tinderforadbd.firebaseapp.com",
-    databaseURL: "https://tinderforadbd-default-rtdb.firebaseio.com",
-    projectId: "tinderforadbd",
-    storageBucket: "tinderforadbd.appspot.com",
-    messagingSenderId: "1030422612794",
-    appId: "1:1030422612794:web:7c034724ed0c0233591e03",
-    measurementId: "G-G3PJXKM91T"
-};
-function getUserLast(userID) {
-    var tester;
-    var database = firebase.database().ref(`/users/${userID}`);
-    console.log('Auto generated key: ', database.key);
-    database.on('value', (snapshot)=>{
-    if (snapshot.exists()) {
-         console.log(snapshot);
-        const userObj = snapshot.val();
-        tester = userObj.lastName;
-        }
-    })
-    return tester;
-};
-function getUserFirst(userID) {
-    var tester;
-    var database = firebase.database().ref(`/users/${userID}`);
-    console.log('Auto generated key: ', database.key);
-    database.on('value', (snapshot)=>{
-    if (snapshot.exists()) {
-         console.log(snapshot);
-        const userObj = snapshot.val();
-        tester = userObj.firstName;
-        }
-    })
-    return tester;
-};
-function getUserMoney(userID) {
-  var tester;
-  var database = firebase.database().ref(`/users/${userID}`);
-  console.log('Auto generated key: ', database.key);
-  database.on('value', (snapshot)=>{
-  if (snapshot.exists()) {
-       console.log(snapshot);
-      const userObj = snapshot.val();
-      tester = userObj.money;
-      }
-  })
-  return tester;
-};
+import { API_URL } from '../config'
 
-//getToken().then(token => setId(token)),console.log(id)
 export function DrawerContent(props) {
-    const [id,setId]= useState('')
-    //getToken().then(token => setId(token))
-    function updateUserManey(userID, addManey){
-      const reference = firebase.database().ref(`/users/${userID}/money`);
-      return reference.transaction(money => {
-          if(addManey>money){
-            Alert.alert(
-              "Ошибка",
-              "Недостаточно средств!",
-              [
-              { text: "OK", onPress: () => {} }
-              ]);
-          }else{
-            getUserMoney(id)
-            if (money === null) return addManey;
-            
-            return money - addManey;
-            }
-          });
+  const [id,setId]= useState('');
+  const [name, setName] = useState('');
+  const [surname, setSurname] = useState('');
+  const [balance, setBalance] = useState(0);
+  const [prizes, setPrizes] = useState([]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const userId = await SecureStore.getItemAsync('userId');
+        const user = await axios.get(`${API_URL}/users/${userId}`);
+        const prizes = await axios.get(`${API_URL}/prizes`);
+        setId(userId);
+        setBalance(user.data.points);
+        setName(user.data.name);
+        setSurname(user.data.surname);
+        setPrizes(prizes.data);
+      } catch (e) {
+        console.log(e);
+      }
     }
+    fetchData();
+  }, [balance])
     
     return(
         <LinearGradient start={{x:-0.15, y:-0.15}} end={{x: 1, y: 1}} style={styles.container }  colors={['#9900cc', '#6666ff']}>
       <View >
         <View style={{flexDirection:'row'}}>
           <View style={{height:height*0.143,justifyContent:'flex-end',alignItems:'flex-start',paddingLeft:width*0.1}}>
-            <Text style={styles.userInf}>Имя{"\n"}Фамилия</Text>
+            <Text style={styles.userInf}>{name}{"\n"}{surname}</Text>
           </View>
           <View style={{height:height*0.143,justifyContent:'flex-end',alignItems:'flex-start',paddingLeft:width*0.15}}>
 
@@ -110,7 +50,7 @@ export function DrawerContent(props) {
         
         <View style={{flexDirection:"row", alignItems: 'center',justifyContent:'flex-start',paddingLeft:width*0.1}}>
           <View style={{flex:3,alignItems: 'flex-start' }}>
-              <Text style={{fontSize:50, color:'#FFF'}}>2000</Text>
+              <Text style={{fontSize:50, color:'#FFF'}}>{balance}</Text>
           </View>
           <View style={{flex:2,alignItems: 'flex-start'}}>
               <Text style={{fontSize:16, color:'#FFF'}}>Бонусов{"\n"}на счету</Text>
@@ -132,59 +72,46 @@ export function DrawerContent(props) {
             </TouchableOpacity>
           </View>
         </View>
-        <View style={{alignItems:'center',height:height*0.12}}>
-          <TouchableOpacity onPress={()=>props.navigation.navigate('UserRoot')}>
-            <View style={styles.button1}>
-                  <Text style={styles.buttontext}>
-                  Преобразовать бонусы в скидку
-                  </Text>
+        {prizes.map(prize => (
+          <View style={{alignItems: 'center', height: height * 0.12}}>
+            <TouchableOpacity onPress={async () => {
+              await axios.post(`${API_URL}/winners`, {userId: id, prizeId: prize.id})
+                .then(response => {
+                  setBalance(prevState => prevState - prize.cost)
+                })
+                .catch(err => {
+                  if (err.response.status === 400) {
+                    Alert.alert(
+                      "Ошибка",
+                      "Недостаточно средств",
+                      [
+                        {
+                          text: "OK", onPress: () => {
+                          }
+                        }
+                      ]);
+                  }
+                })
+            }}>
+              <View style={styles.button1}>
+                <Text style={styles.buttontext}>
+                  {prize.title}
+                </Text>
+                <Text style={styles.buttontext2}>
+                  {prize.cost}
+                </Text>
               </View>
-          </TouchableOpacity>
-        </View>
-        <View style={{alignItems:'center',height:height*0.12}}>
-          <TouchableOpacity onPress={()=>{props.navigation.push('App')}}>
-            <View style={styles.button1}>
-                  <Text style={styles.buttontext}>
-                  Списать 
-                  </Text>
-                  <Text style={styles.buttontext2}>
-                  200
-                  </Text>
-              </View>
-          </TouchableOpacity>
-        </View>
-        <View style={{alignItems:'center',height:height*0.12}}>
-          <TouchableOpacity onPress={()=>{props.navigation.push('App')}}>
-            <View style={styles.button1}>
-                  <Text style={styles.buttontext}>
-                  Списать 
-                  </Text>
-                  <Text style={styles.buttontext2}>
-                  400 
-                  </Text>
-              </View>
-          </TouchableOpacity>
-        </View>
-        <View style={{alignItems:'center',height:height*0.12}}>
-          <TouchableOpacity onPress={()=>{props.navigation.push('App')}}>
-            <View style={styles.button1}>
-                  <Text style={styles.buttontext}>
-                  Списать
-                  </Text>
-                  <Text style={styles.buttontext2}>
-                  600
-                  </Text>
-              </View>
-          </TouchableOpacity>
-        </View>
+            </TouchableOpacity>
+          </View>
+        ))}
         <View style={{alignItems:'center',height:height*0.07}}>
-          {/* <TouchableOpacity style={styles.container} onPress={()=>props.navigation.navigate('Log1')}>
+          <TouchableOpacity style={styles.container} onPress={()=>props.navigation.navigate('Log1')}>
               <View style={styles.button}>
                   <Text style={styles.smallbuttontext2}>
                       Выход
                   </Text>
               </View>
-          </TouchableOpacity> */}
+          </TouchableOpacity>
         </View>
       </View> 
     </LinearGradient>);

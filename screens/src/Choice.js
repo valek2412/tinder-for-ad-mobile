@@ -12,6 +12,7 @@ export default function Choice({ type }) {
   //     <Text style={[styles.text, { color }]}>{type}</Text>
   //   </View>
   // );
+
   if (type=='like'){
     return(
       <View style={styles.container}>
