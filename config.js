@@ -1,1 +1,1 @@
-export const API_URL = `http://192.168.0.119:5000`
+export const API_URL = `https://tinder-for-ad-back-end.herokuapp.com`

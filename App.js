@@ -1,7 +1,6 @@
-import React,{useState} from 'react';
+import React from 'react';
 import {LoginScreen1} from './screens/LoginScreen1';
 import {LoginScreen2} from './screens/LoginScreen2';
-import {MainScreen1} from './screens/MainScreen1';
 import {RegistrationScreen1} from './screens/RegistrationScreen1';
 import {RegistrationScreen2} from './screens/RegistrationScreen2';
 import {RegistrationScreen3} from './screens/RegistrationScreen3';
@@ -11,9 +10,6 @@ import { createDrawerNavigator } from '@react-navigation/drawer';
 import {SaleBonus} from './screens/saleBonus';
 
 import Main from './screens/src/Main';
-import { LinearGradient } from 'expo-linear-gradient';
-import {  Text,StyleSheet, View, TouchableOpacity  } from 'react-native';
-import * as SecureStore from 'expo-secure-store';
 import {DrawerContent} from './screens/Drawer'
 
 const Stack = createStackNavigator();
@@ -33,7 +29,6 @@ function Root() {
       <Stack.Screen options={{headerShown: false}} name="App" component={App} />
     </Stack.Navigator>
     </NavigationContainer>
-
   );
 }
 const Drawer = createDrawerNavigator(); 

@@ -15,7 +15,8 @@ import {API_URL} from '../config'
 export  function RegistrationScreen3({route,navigation}) {
     const keyboardVerticalOffset = Platform.OS === 'ios' ? 40 : 0
     const [firstName, setFirstName] = useState('');
-    const [lastName, setLastName] = useState('');  
+    const [lastName, setLastName] = useState('');
+    const [patronymic, setPatronymic] = useState('');
     const [cityName, setCityName] = useState('');
     const [birthDay, setBirthDay] = useState('');
     const [birthMonth, setBirthMonth] = useState('');
@@ -45,6 +46,7 @@ export  function RegistrationScreen3({route,navigation}) {
               phoneNumber: route.params.phoneNumber,
               name: firstName,
               surname: lastName,
+              patronymic,
               city: cityName,
               birthDate: `${birthYear}-${birthMonth}-${birthDay}`
           }
@@ -63,7 +65,7 @@ export  function RegistrationScreen3({route,navigation}) {
         <LinearGradient start={{x:-0.15, y:-0.15}} end={{x: 1, y: 1}} style={styles.container }  colors={['#9900cc', '#6666ff']}>
                 <View>
                 <KeyboardAvoidingView behavior='position' keyboardVerticalOffset={keyboardVerticalOffset}>
-                    <View style={{height:height*0.18}}></View>   
+                    <View style={{height:height*0.17}}></View>
                     <View style={styles.textPlace}>
                         <Text style={styles.text}>Имя:</Text>
                     </View>
@@ -87,10 +89,21 @@ export  function RegistrationScreen3({route,navigation}) {
                         onChangeText={value => setLastName(value)} 
                         />
                     </View>
-                    <View style={{alignItems:'center', height:height*0.07}}>
+                    <View style={styles.textPlace}>
+                        <Text style={styles.text}>Отчество:</Text>
+                    </View>
+                    <View style={styles.inputPlace}>
+                        <TextInput
+                          returnKeyType = { "next" }
+                          style={styles.input}
+                          value={patronymic}
+                          onChangeText={value => setPatronymic(value)}
+                        />
+                    </View>
+                    <View style={{alignItems:'center', marginBottom: 5}}>
                         <Text style={styles.text}>Дата рождения:</Text>
                     </View>
-                    <View style={{width:width*0.8, flexDirection:'row'}}>
+                    <View style={{width:width*0.8, flexDirection:'row', alignItems:'flex-end', marginBottom: 10}}>
                         <View style={{width:width*0.23, alignItems:'flex-end'}}>
                             
                             <TextInput style={styles.input1}
@@ -168,17 +181,17 @@ export  function RegistrationScreen3({route,navigation}) {
         input:{
             borderWidth: 2,
             width: '100%',
-            padding: 5,
+            padding: 3,
             borderRadius: 30,
             borderColor: 'white' ,
             color: 'white', 
-            fontSize: 25,
+            fontSize: 23,
             textAlign: 'center',
         },
         input1:{
             borderWidth: 2,
             width: '96%',
-            padding: 5,
+            padding: 3,
             borderRadius: 30,
             borderColor: 'white' ,
             color: 'white', 
@@ -189,7 +202,7 @@ export  function RegistrationScreen3({route,navigation}) {
         input2:{
             borderWidth: 2,
             width: '97%',
-            padding: 5,
+            padding: 3,
             borderRadius: 30,
             borderColor: 'white' ,
             color: 'white', 
@@ -197,32 +210,32 @@ export  function RegistrationScreen3({route,navigation}) {
             textAlign: 'center',
         },
         imagePlace:{
-            height:height*0.33,
+            marginBottom: 10,
             justifyContent:'center',
             alignItems:'center',
         },
         textPlace:{
-            height:height*0.05,
+            marginBottom: 5,
             justifyContent:'flex-end',
             alignItems:'center',
         },
         inputPlace:{
-            height:height*0.095,
+            marginBottom: 10,
             justifyContent:'center',
             alignItems:'center',    
         },
         buttonPlace:{
-            height:height*0.083,
+            marginTop: 10,
+            marginBottom: 10,
             justifyContent:'center',
             alignItems:'center',    
         },
         mbuttonPlace:{
-            height:height*0.083,
+            marginBottom: 10,
             justifyContent:'center',
             alignItems:'center'    
         },
         mtextPlace:{
-            height:height*0.041,
             justifyContent:'center',
             alignItems:'center'   
         } 
